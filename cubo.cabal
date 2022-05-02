@@ -1,0 +1,42 @@
+cabal-version:      >=1.10
+name:               cubo
+version:            0.1.0.0
+synopsis:           A proof assistant based on Lambda Cube
+
+-- A longer description of the package.
+-- description:
+homepage:           https://github.com/isaac025/cubo
+
+-- A URL where users can report bugs.
+-- bug-reports:
+license:            GPL-2
+license-file:       LICENSE
+author:             Isaac Lopez
+maintainer:         isaac.lopez@upr.edu
+
+-- A copyright notice.
+-- copyright:
+category:           Theorem Provers
+build-type:         Simple
+extra-source-files: CHANGELOG.md
+
+executable cubo
+    main-is:          Main.hs
+
+    -- Modules included in this executable, other than Main.
+    other-modules:    Syntax
+                    , Parser
+                    , Pretty
+                    , Eval
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+    build-depends:    base >=4.14 && <4.15
+                    , parsec >=3.1 && <3.2
+                    , containers >=0.5 && <0.6
+                    , haskeline >= 0.7
+                    , pretty >= 1.1 && <= 1.2
+                    , mtl
+                    , transformers
+    hs-source-dirs:   app
+    default-language: Haskell2010
