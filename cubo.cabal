@@ -28,6 +28,8 @@ executable cubo
                     , Parser
                     , Pretty
                     , Eval
+                    , Check
+                    , Lexer
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

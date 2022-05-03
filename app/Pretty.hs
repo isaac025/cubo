@@ -1,47 +1,52 @@
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
+module Pretty ( ppexpr 
+              , pptype
+              ) where
 
-module Pretty ( ppexpr ) where
-
-import Prelude hiding ((<>))
 import Text.PrettyPrint
 import Syntax
+import Check
 
 class Pretty p where
     ppr :: Int -> p -> Doc
+    pp :: p -> Doc
+
+    pp = ppr 0
 
 parensIf :: Bool -> Doc -> Doc
 parensIf True = parens
 parensIf False = id
 
-instance Pretty Name where
-    ppr _ x = text x
-
 instance Pretty Expr where
-    ppr _ (Var x)           = text x
-    ppr _ (Lit (LInt a))    = text (show a)
-    ppr _ (Lit (LBool b))   = text (show b)
-    ppr p e@(App _ _)       = parensIf (p>0) (ppr p f <+> sep (map (ppr (p+1)) xs))
-        where (f,xs) = viewApp e
-    ppr p e@(Lam _ _)       = parensIf (p>0) $ char '\\' <> hsep vars <+> text "." <+> body
-        where vars = map (ppr 0) (viewVars e)
-              body = ppr (p+1) (viewBody e)
+    ppr p ex = case ex of
+        Var x -> text x
+        Lit (LInt a) -> text (show a)
+        Lit (LBool b) -> text (show b)
+        App a b -> (parensIf (p > 0) (ppr (p + 1) a)) <+> (ppr p b)
+        Lam x t a -> parensIf (p > 0) $
+                char '\\'
+            <+> parens (text x <+> char ':' <+> ppr p t)
+            <+> text "->"
+            <+> ppr (p + 1) a
 
-viewVars :: Expr -> [Name]
-viewVars (Lam n a) = n : viewVars a
-viewVars _ = []
+instance Pretty Type where
+    ppr _ TInt = text "Int"
+    ppr _ TBool = text "Bool"
+    ppr p (TArr a b) = (parensIf (isArrow a) (ppr p a)) <+> text "->" <+> ppr p b
+        where isArrow TArr{} = True
+              isArrow _      = False
 
-viewBody :: Expr -> Expr
-viewBody (Lam _ a) = viewBody a
-viewBody x = x
+instance Show TypeError where
+    show (Mismatch a b) = 
+        "Expecting " ++ (pptype b) ++ "but got " ++ (pptype a)
 
-viewApp :: Expr -> (Expr, [Expr])
-viewApp (App e1 e2) = go e1 [e2]
-    where go (App a b) xs = go a (b : xs)
-          go f xs = (f,xs)
-viewApp _ = error "not application"
+    show (NotFunction a) =
+        "Tried to apply to non-function type: " ++ (pptype a)
+    show (NotInScope a) = 
+        "Variable " ++ a ++ " is not in scope"
 
 ppexpr :: Expr -> String
 ppexpr = render . ppr 0
 
+pptype :: Type -> String
+pptype = render . ppr 0
 

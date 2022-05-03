@@ -1,16 +1,13 @@
 module Main where
 
-import Control.Monad
 import Control.Monad.Trans
 import System.Console.Haskeline
 
 import Syntax
 import Parser
-import Pretty
+import Check
 import Eval
-
-showStep :: (Int, Expr) -> IO ()
-showStep (d, x) = putStrLn ((replicate d ' ') ++ "=> " ++ ppexpr x)
+import Pretty
 
 process :: String -> IO ()
 process line = do
@@ -18,9 +15,10 @@ process line = do
     case res of
         Left err -> print err
         Right ex -> do
-            let (out, ~steps) = runEval ex
-            mapM_ showStep steps
-            print out
+            let chk = checkTop [] ex
+            case chk of
+                Left tyerr -> print tyerr
+                Right _ -> print $ runEval ex
 
 main :: IO ()
 main = runInputT defaultSettings loop
